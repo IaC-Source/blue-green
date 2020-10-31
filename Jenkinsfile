@@ -14,9 +14,8 @@ podTemplate(
 )
 {
     node(POD_LABEL) {
-        stage('blue-green deployment'){
-            container('kustomize'){
-              sh '''
+      stage('define tag'){
+          sh '''
               echo "----- define tag"
               if [ $(($BUILD_NUMBER % 2)) -eq 1 ]
               then
@@ -25,8 +24,10 @@ podTemplate(
                 export tag="green"
               fi             
               '''
-              
-              dir('bluegreen/deployment'){
+      }
+      stage('deploy configmap and deployment'){
+        container('kustomize'){
+              dir('deployment'){
                 sh '''
                   kustomize create --resources ./deployment.yaml
                   echo "deploy new deployment"
@@ -37,9 +38,10 @@ podTemplate(
                   echo "retrieve new deployment"
                   kubectl get deployments -o wide
                 '''
-              }
-              
-              dir('bluegreen/service'){
+        }
+      }
+      stage('switching LB'){
+        dir('service'){
                 sh '''
                   kustomize create --resources ./lb.yaml
                   while true;
@@ -60,9 +62,7 @@ podTemplate(
                   fi
                   done
                 '''
-              }
-            }
-        }
-
+        }        
+      }
     }
 }
