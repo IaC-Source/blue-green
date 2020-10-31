@@ -2,6 +2,11 @@ podTemplate(
   serviceAccount: 'jenkins',
   containers: [
     containerTemplate(
+      name: 'jnlp', 
+      image: 'jenkins/inbound-agent:4.3-4',
+      args: '${computer.jnlpmac} ${computer.name}'
+    ),
+    containerTemplate(
       name: 'kustomize',
       image: 'webfuel/kustomize:3.6.1',
       ttyEnabled: true,
