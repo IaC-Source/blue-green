@@ -1,3 +1,5 @@
+def TAG
+
 podTemplate(
   serviceAccount: 'jenkins',
   containers: [
@@ -30,10 +32,12 @@ podTemplate(
               fi
               echo "------ $tag"
               '''
+          TAG="${env.tag}"
       }
       stage('deploy configmap and deployment'){
         container('kustomize'){
               dir('deployment'){
+                echo "${TAG}"
                 sh '''
                   echo "----- $tag"
                   kustomize create --resources ./deployment.yaml
