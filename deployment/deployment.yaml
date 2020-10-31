@@ -35,9 +35,9 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: dashboard
+  name: dashboard-configmap
   labels:
-    app: dashboard
+    app: dashboard-configmap
 data:
    nginx.conf: |-
     server {
