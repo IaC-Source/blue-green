@@ -64,8 +64,8 @@ podTemplate(
                     kustomize create --resources ./lb.yaml
                     while true;
                     do
-                    export replicas=$(kubectl get deployments --selector=app=echo-buildtime,deploy=$tag -o jsonpath --template="{.items[0].status.replicas}")
-                    export ready=$(kubectl get deployments --selector=app=echo-buildtime,deploy=$tag -o jsonpath --template="{.items[0].status.readyReplicas}")
+                    export replicas=$(kubectl get deployments --selector=app=dashboard,deploy=$tag -o jsonpath --template="{.items[0].status.replicas}")
+                    export ready=$(kubectl get deployments --selector=app=dashboard,deploy=$tag -o jsonpath --template="{.items[0].status.readyReplicas}")
                     echo "total replicas: $replicas, ready replicas: $ready"
                     if [ "$ready" == "$replicas" ]; then
                       echo "Since all replicas have been deployed replace the target deployemnt of the loadbalancer"
