@@ -21,6 +21,9 @@ podTemplate(
 )
 {
     node(POD_LABEL) {
+      stage('git scm update'){
+          git 'https://github.com/IaC-Source/dashboard-deploy.git'
+      }      
       stage('define tag'){
           sh 'pwd'
           sh 'ls'
