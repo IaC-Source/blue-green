@@ -39,12 +39,13 @@ podTemplate(
                 sh '''
                   ls
                   echo "stage2-sh $tag"
+                  kubectl apply -f configmap.yaml
                   kustomize create --resources ./deployment.yaml
                   echo "deploy new deployment"
                   kustomize edit add label deploy:$tag -f
                   kustomize edit set namesuffix -- -$tag
                   kustomize edit set image sysnet4admin/dashboard:$tag
-                  kustomize build . | kubectl apply -f - configmap.yaml
+                  kustomize build . | kubectl apply -f -
                   echo "retrieve new deployment"
                   kubectl get deployments -o wide
                 '''
