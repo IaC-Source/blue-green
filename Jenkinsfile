@@ -22,24 +22,24 @@ podTemplate(
 {
     node(POD_LABEL) {
       stage('define tag'){
-          sh '''
-              echo "----- define tag"
-              if [ $(($BUILD_NUMBER % 2)) -eq 1 ]
-              then
-                export tag="blue"
-              else
-                export tag="green"
-              fi
-              echo "------ $tag"
-              '''
-          TAG="${env.tag}"
+          sh 'pwd'
+          sh 'ls'
+          sh 'ls deployment'
+          if(env.BUILD_NUMBER.toInteger() % 2 == 1){
+              TAG = "blue"
+          } else {
+              TAG = "green"
+          }
       }
       stage('deploy configmap and deployment'){
         container('kustomize'){
               dir('deployment'){
-                echo "${TAG}"
+                echo "stage2: $TAG"
+                withEnv(["tag=${TAG}"]){
+                sh 'pwd'
                 sh '''
-                  echo "----- $tag"
+                  ls
+                  echo "stage2-sh $tag"
                   kustomize create --resources ./deployment.yaml
                   echo "deploy new deployment"
                   kustomize edit add label deploy:$tag -f
@@ -49,6 +49,7 @@ podTemplate(
                   echo "retrieve new deployment"
                   kubectl get deployments -o wide
                 '''
+                }
             }
         }
       }
