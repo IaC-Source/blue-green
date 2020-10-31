@@ -27,13 +27,15 @@ podTemplate(
                 export tag="blue"
               else
                 export tag="green"
-              fi             
+              fi
+              echo "------ $tag"
               '''
       }
       stage('deploy configmap and deployment'){
         container('kustomize'){
               dir('deployment'){
                 sh '''
+                  echo "----- $tag"
                   kustomize create --resources ./deployment.yaml
                   echo "deploy new deployment"
                   kustomize edit add label deploy:$tag -f
@@ -49,6 +51,7 @@ podTemplate(
       stage('switching LB'){
         dir('service'){
                 sh '''
+                echo "----- $tag"
                   kustomize create --resources ./lb.yaml
                   while true;
                   do
