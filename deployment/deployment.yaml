@@ -17,6 +17,7 @@ spec:
       containers:
       - name: dashboard
         image: sysnet4admin/dashboard
+        imagePullPolicy: Always
         volumeMounts:
         - name: config-volume
           mountPath: /etc/nginx/conf.d/
