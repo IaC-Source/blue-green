@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+  labels:
+    app: dashboard
+spec:
+  selector:
+    matchLabels:
+      app: dashboard
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      containers:
+      - name: dashboard
+        image: sysnet4admin/dashboard
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/nginx/conf.d/
+        - name: log-volume
+          mountPath: /log          
+        ports:
+        - containerPort: 80
+      volumes:
+        - name: config-volume
+          configMap:
+            name: dashboard-configmap
+        - name: log-volume
+          emptyDir:
+            {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard
+  labels:
+    app: dashboard
+data:
+   nginx.conf: |-
+    server {
+      add_header Cache-Control no-store;
+      listen 80;
+      location / {
+        root /public;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+      }
+      access_log /log/access.log;
+      location /api {
+        default_type application/json;
+        return 200 'Blue-Green';
+      }
+    }
