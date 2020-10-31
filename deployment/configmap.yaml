@@ -5,7 +5,7 @@ metadata:
   labels:
     app: dashboard-configmap
 data:
-   default.conf: |-
+   web.conf: |-
     server {
       add_header Cache-Control no-store;
       listen 80;
