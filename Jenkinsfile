@@ -57,29 +57,31 @@ podTemplate(
         }
       }
       stage('switching LB'){
-        dir('service'){
-                sh '''
-                echo "----- $tag"
-                  kustomize create --resources ./lb.yaml
-                  while true;
-                  do
-                  export replicas=$(kubectl get deployments --selector=app=echo-buildtime,deploy=$tag -o jsonpath --template="{.items[0].status.replicas}")
-                  export ready=$(kubectl get deployments --selector=app=echo-buildtime,deploy=$tag -o jsonpath --template="{.items[0].status.readyReplicas}")
-                  echo "total replicas: $replicas, ready replicas: $ready"
-                  if [ "$ready" == "$replicas" ]; then
-                    echo "Since all replicas have been deployed replace the target deployemnt of the loadbalancer"
-                    kustomize edit add label deploy:$tag -f
-                    kustomize build . | kubectl apply -f -
-                    echo "delete old deployment resources"
-                    kubectl delete deployment --selector=app=dashboard,deploy!=$tag
-                    kubectl get deployments -o wide
-                    break
-                  else
-                    sleep 1
-                  fi
-                  done
-                '''
-        }        
+        container('kustomize'){
+          dir('service'){
+                  sh '''
+                  echo "----- $tag"
+                    kustomize create --resources ./lb.yaml
+                    while true;
+                    do
+                    export replicas=$(kubectl get deployments --selector=app=echo-buildtime,deploy=$tag -o jsonpath --template="{.items[0].status.replicas}")
+                    export ready=$(kubectl get deployments --selector=app=echo-buildtime,deploy=$tag -o jsonpath --template="{.items[0].status.readyReplicas}")
+                    echo "total replicas: $replicas, ready replicas: $ready"
+                    if [ "$ready" == "$replicas" ]; then
+                      echo "Since all replicas have been deployed replace the target deployemnt of the loadbalancer"
+                      kustomize edit add label deploy:$tag -f
+                      kustomize build . | kubectl apply -f -
+                      echo "delete old deployment resources"
+                      kubectl delete deployment --selector=app=dashboard,deploy!=$tag
+                      kubectl get deployments -o wide
+                      break
+                    else
+                      sleep 1
+                    fi
+                    done
+                  '''
+          }            
+        }    
       }
     }
 }
