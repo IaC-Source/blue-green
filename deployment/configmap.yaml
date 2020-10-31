@@ -5,7 +5,7 @@ metadata:
   labels:
     app: dashboard-configmap
 data:
-   nginx.conf: |-
+   default.conf: |-
     server {
       add_header Cache-Control no-store;
       listen 80;
