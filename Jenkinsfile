@@ -44,7 +44,7 @@ podTemplate(
                   kustomize edit add label deploy:$tag -f
                   kustomize edit set namesuffix -- -$tag
                   kustomize edit set image sysnet4admin/dashboard:$tag
-                  kustomize build . | kubectl apply -f -
+                  kustomize build . | kubectl apply -f - configmap.yaml
                   echo "retrieve new deployment"
                   kubectl get deployments -o wide
                 '''
