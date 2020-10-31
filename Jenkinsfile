@@ -38,6 +38,7 @@ podTemplate(
                   echo "retrieve new deployment"
                   kubectl get deployments -o wide
                 '''
+            }
         }
       }
       stage('switching LB'){
