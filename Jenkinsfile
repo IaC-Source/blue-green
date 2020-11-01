@@ -37,8 +37,6 @@ podTemplate(
               dir('deployment'){
                 withEnv(["tag=${TAG}"]){
                 sh '''
-                  ls
-                  echo "stage2-sh $tag"
                   kubectl apply -f configmap.yaml
                   kustomize create --resources ./deployment.yaml
                   echo "deploy new deployment"
