@@ -7,7 +7,7 @@ metadata:
 spec:
   ports:
   - protocol: TCP
-    port: 18080
+    port: 80
     targetPort: 80
   selector:
     app: dashboard
