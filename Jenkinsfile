@@ -10,7 +10,7 @@ podTemplate(
     ),
     containerTemplate(
       name: 'kustomize',
-      image: 'webfuel/kustomize:3.6.1',
+      image: 'sysnet4admin/kustomize:3.6.1',
       ttyEnabled: true,
       command: 'cat'
     )
