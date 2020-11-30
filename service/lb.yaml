@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     app: dashboard
-  name: dashboard
+  name: pl-blue-green-svc
 spec:
   ports:
   - protocol: TCP
