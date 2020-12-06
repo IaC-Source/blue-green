@@ -63,10 +63,10 @@ podTemplate(
                 export ready=$(kubectl get deployments --selector=app=pl-$tag,deploy=$tag -o jsonpath --template="{.items[0].status.readyReplicas}")
                 echo "total replicas: $replicas, ready replicas: $ready"
                 if [ "$ready" == "$replicas" ]; then
-                  echo "Since all replicas have been deployed replace the target deployemnt of the loadbalancer"
+                  echo "tag change and build deployment file by kustomize" 
                   kustomize edit add label deploy:$tag -f
                   kustomize build . | kubectl apply -f -
-                  echo "delete old deployment resources"
+                  echo "delete $tag deployment"
                   kubectl delete deployment --selector=app=dashboard,deploy!=$tag
                   kubectl get deployments -o wide
                   break
