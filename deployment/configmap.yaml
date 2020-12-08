@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: dashboard-configmap
   labels:
-    app: dashboard-configmap
+    app: dashboard
 data:
    web.conf: |-
     server {
