@@ -1,7 +1,7 @@
 pipeline {
   agent {
     kubernetes {
-      yaml """
+      yaml '''
 apiVersion: v1
 kind: Pod
 metadata:
@@ -22,7 +22,7 @@ spec:
   - name: kubectl
     hostPath:
       path: /bin/kubectl
-      """
+      '''
     }
   }
   stages {
