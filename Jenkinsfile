@@ -1,40 +1,51 @@
-def TAG
-  podTemplate(
-    serviceAccount: 'jenkins',
-    containers: [
-      containerTemplate(
-        name: 'jnlp', 
-        image: 'jenkins/inbound-agent:4.3-4',
-        args: '${computer.jnlpmac} ${computer.name}'
-      ),
-    containerTemplate(
-        name: 'kustomize',
-        image: 'sysnet4admin/kustomize:3.6.1',
-        ttyEnabled: true,
-        command: 'cat'
-      )
-    ],
-    volumes: [
-      hostPathVolume(mountPath: '/bin/kubectl', hostPath: '/bin/kubectl'),
-    ]
-  )
-{
-  node(POD_LABEL) {
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: blue-green-deploy
+spec:
+  containers:
+  - name: kustomize
+    image: sysnet4admin/kustomize:3.6.1
+    tty: true
+    volumeMounts:
+    - mountPath: /bin/kubectl
+      name: kubectl
+    command:
+    - cat
+  serviceAccount: jenkins
+  volumes:
+  - name: kubectl
+    hostPath:
+      path: /bin/kubectl
+      """
+    }
+  }
+  stages {
     stage('git scm update'){
-      git url: 'https://github.com/IaC-Source/blue-green.git', branch: 'main'
-    }      
-    stage('define tag'){
-      if(env.BUILD_NUMBER.toInteger() % 2 == 1){
-      TAG = "blue"
-      } else {
-      TAG = "green"
+      steps {
+        git url: 'https://github.com/IaC-Source/blue-green.git', branch: 'main'
       }
-      echo "tag: $TAG"
+    }
+    stage('define tag'){
+      steps {
+        script {
+          if(env.BUILD_NUMBER.toInteger() % 2 == 1){
+            env.tag = "blue"
+          } else {
+            env.tag = "green"
+          }
+        }
+      }
     }
     stage('deploy configmap and deployment'){
-      container('kustomize'){
+      steps {
+        container('kustomize'){
           dir('deployment'){
-            withEnv(["tag=${TAG}"]){
               sh '''
               kubectl apply -f configmap.yaml
               kustomize create --resources ./deployment.yaml
@@ -45,35 +56,39 @@ def TAG
               kustomize build . | kubectl apply -f -
               echo "retrieve new deployment"
               kubectl get deployments -o wide
-              '''
+            '''
           }
         }
-      }
+      }    
     }
     stage('switching LB'){
-      container('kustomize'){
-        dir('service'){
-          withEnv(["tag=${TAG}"]){
-            sh '''
-            kustomize create --resources ./lb.yaml
-            while true;
-            do
-            export replicas=$(kubectl get deployments --selector=app=dashboard,deploy=$tag -o jsonpath --template="{.items[0].status.replicas}")
-            export ready=$(kubectl get deployments --selector=app=dashboard,deploy=$tag -o jsonpath --template="{.items[0].status.readyReplicas}")
-            echo "total replicas: $replicas, ready replicas: $ready"
-            if [ "$ready" -eq "$replicas" ]; then
-            echo "tag change and build deployment file by kustomize" 
-            kustomize edit add label deploy:$tag -f
-            kustomize build . | kubectl apply -f -
-            echo "delete $tag deployment"
-            kubectl delete deployment --selector=app=dashboard,deploy!=$tag
-            kubectl get deployments -o wide
-            break
-            else
-            sleep 1
-            fi
-            done
-            '''
+      steps {
+        container('kustomize'){
+          dir('service'){
+              sh '''
+              kustomize create --resources ./lb.yaml
+              while true;
+              do
+              export replicas=$(kubectl get deployments \
+              --selector=app=dashboard,deploy=$tag \
+              -o jsonpath --template="{.items[0].status.replicas}")
+              export ready=$(kubectl get deployments \
+              --selector=app=dashboard,deploy=$tag \
+              -o jsonpath --template="{.items[0].status.readyReplicas}")
+              echo "total replicas: $replicas, ready replicas: $ready"
+              if [ "$ready" -eq "$replicas" ]; then
+              echo "tag change and build deployment file by kustomize" 
+              kustomize edit add label deploy:$tag -f
+              kustomize build . | kubectl apply -f -
+              echo "delete $tag deployment"
+              kubectl delete deployment --selector=app=dashboard,deploy!=$tag
+              kubectl get deployments -o wide
+              break
+              else
+              sleep 1
+              fi
+              done
+              '''
           }
         }
       }
