@@ -6,7 +6,8 @@ pipeline {
       kind: Pod
       metadata:
         labels:
-          name: blue-green-deploy
+          app: blue-green-deploy
+        name: blue-green-deploy
       spec:
         containers:
         - name: kustomize
