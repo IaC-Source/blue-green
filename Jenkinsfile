@@ -2,26 +2,26 @@ pipeline {
   agent {
     kubernetes {
       yaml '''
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    name: blue-green-deploy
-spec:
-  containers:
-  - name: kustomize
-    image: sysnet4admin/kustomize:3.6.1
-    tty: true
-    volumeMounts:
-    - mountPath: /bin/kubectl
-      name: kubectl
-    command:
-    - cat
-  serviceAccount: jenkins
-  volumes:
-  - name: kubectl
-    hostPath:
-      path: /bin/kubectl
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        labels:
+          name: blue-green-deploy
+      spec:
+        containers:
+        - name: kustomize
+          image: sysnet4admin/kustomize:3.6.1
+          tty: true
+          volumeMounts:
+          - mountPath: /bin/kubectl
+            name: kubectl
+          command:
+          - cat
+        serviceAccount: jenkins
+        volumes:
+        - name: kubectl
+          hostPath:
+            path: /bin/kubectl
       '''
     }
   }
@@ -46,16 +46,16 @@ spec:
       steps {
         container('kustomize'){
           dir('deployment'){
-              sh '''
-              kubectl apply -f configmap.yaml
-              kustomize create --resources ./deployment.yaml
-              echo "deploy new deployment"
-              kustomize edit add label deploy:$tag -f
-              kustomize edit set namesuffix -- -$tag
-              kustomize edit set image sysnet4admin/dashboard:$tag
-              kustomize build . | kubectl apply -f -
-              echo "retrieve new deployment"
-              kubectl get deployments -o wide
+            sh '''
+            kubectl apply -f configmap.yaml
+            kustomize create --resources ./deployment.yaml
+            echo "deploy new deployment"
+            kustomize edit add label deploy:$tag -f
+            kustomize edit set namesuffix -- -$tag
+            kustomize edit set image sysnet4admin/dashboard:$tag
+            kustomize build . | kubectl apply -f -
+            echo "retrieve new deployment"
+            kubectl get deployments -o wide
             '''
           }
         }
@@ -65,10 +65,10 @@ spec:
       steps {
         container('kustomize'){
           dir('service'){
-              sh '''
-              kustomize create --resources ./lb.yaml
-              while true;
-              do
+            sh '''
+            kustomize create --resources ./lb.yaml
+            while true;
+            do
               export replicas=$(kubectl get deployments \
               --selector=app=dashboard,deploy=$tag \
               -o jsonpath --template="{.items[0].status.replicas}")
@@ -77,18 +77,18 @@ spec:
               -o jsonpath --template="{.items[0].status.readyReplicas}")
               echo "total replicas: $replicas, ready replicas: $ready"
               if [ "$ready" -eq "$replicas" ]; then
-              echo "tag change and build deployment file by kustomize" 
-              kustomize edit add label deploy:$tag -f
-              kustomize build . | kubectl apply -f -
-              echo "delete $tag deployment"
-              kubectl delete deployment --selector=app=dashboard,deploy!=$tag
-              kubectl get deployments -o wide
-              break
+                echo "tag change and build deployment file by kustomize" 
+                kustomize edit add label deploy:$tag -f
+                kustomize build . | kubectl apply -f -
+                echo "delete $tag deployment"
+                kubectl delete deployment --selector=app=dashboard,deploy!=$tag
+                kubectl get deployments -o wide
+                break
               else
-              sleep 1
+                sleep 1
               fi
-              done
-              '''
+            done
+            '''
           }
         }
       }
